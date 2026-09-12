@@ -32,6 +32,11 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // FIX (build failure, confirmed from your Actions log): libsignal-android's
+        // AAR metadata declares it needs Java 8+ APIs available on minSdk 26 devices
+        // that don't natively support all of them — "core library desugaring" is
+        // Android's standard mechanism for that, not a libsignal-specific workaround.
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "17"
@@ -39,6 +44,8 @@ android {
 }
 
 dependencies {
+    // Required by isCoreLibraryDesugaringEnabled above.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     // --- Jetpack Compose ---
     implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.compose.ui:ui")
