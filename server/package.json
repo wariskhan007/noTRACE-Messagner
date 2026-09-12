@@ -1,0 +1,26 @@
+{
+  "name": "notrace-signaling-server",
+  "version": "0.1.0",
+  "description": "Zero-persistence WebSocket signaling/rendezvous server for NoTrace Messenger. Never stores message content — only in-memory presence, username/ID uniqueness, and a TTL-bound encrypted mailbox.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "lint": "echo 'wire up eslint if desired'"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/ws": "^8.5.10",
+    "@types/uuid": "^9.0.8",
+    "typescript": "^5.5.0",
+    "ts-node-dev": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

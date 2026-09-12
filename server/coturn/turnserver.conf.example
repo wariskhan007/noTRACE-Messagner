@@ -1,0 +1,34 @@
+# coturn config — NAT traversal only. This process never sees message
+# content, ever: it only relays already-DTLS/SRTP-encrypted WebRTC bytes
+# for the ~10-15% of connections that can't establish a direct P2P path.
+#
+# Install: apt install coturn  (or run via Docker: coturn/coturn image)
+# Copy this file to /etc/turnserver.conf and fill in the placeholders.
+
+listening-port=3478
+tls-listening-port=5349
+
+# Replace with your server's public IP / domain
+external-ip=YOUR_PUBLIC_IP
+realm=notrace-messenger.example
+
+# Long-term credential mechanism — generate per-session/time-limited
+# credentials from your signaling server rather than a single static
+# secret in production (see coturn's REST API auth docs).
+use-auth-secret
+static-auth-secret=CHANGE_ME_TO_A_LONG_RANDOM_SECRET
+
+# Zero persistent logging — matches the project's no-log requirement.
+no-cli
+no-tlsv1
+no-tlsv1_1
+log-file=stdout
+simple-log
+
+# Only relay, never allow the TURN server itself to originate/inspect app data.
+no-multicast-peers
+denied-peer-ip=0.0.0.0-0.255.255.255
+denied-peer-ip=127.0.0.0-127.255.255.255
+
+cert=/etc/coturn/cert.pem
+pkey=/etc/coturn/privkey.pem

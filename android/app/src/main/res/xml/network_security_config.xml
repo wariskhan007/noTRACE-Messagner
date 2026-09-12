@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android blocks all cleartext (unencrypted, "ws://" / "http://") network
+  traffic by default since API 28 — with no exception, this app's
+  ws://10.0.2.2:8080 default (see AppContainer.SIGNALING_SERVER_URL) would
+  silently fail to connect on every device/emulator, with no obvious error.
+
+  This carves out ONE narrow exception: 10.0.2.2, which is the Android
+  emulator's special alias for "the host machine's localhost" — i.e. this
+  only matters when running the signaling server locally on your own
+  computer for emulator testing. It does NOT apply to any other address.
+
+  Once you deploy a real server (see server/README and the deployment
+  steps you were given), change SIGNALING_SERVER_URL to a wss:// address
+  and this file stops being relevant — real traffic will always be
+  encrypted, exactly as it should be for a messenger.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>
