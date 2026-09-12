@@ -4,7 +4,6 @@ import com.notrace.messenger.data.MessageRepository
 import com.notrace.messenger.network.webrtc.CallManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -36,11 +35,10 @@ class NetworkCoordinator(
             while (isActive) {
                 try {
                     signalingClient.connect()
-                        .onEach {
-                            handle(it)
+                        .collect { msg ->
+                            handle(msg)
                             backoffMs = 1_000L // reset once the link is proven live again
                         }
-                        .collect()
                 } catch (t: Throwable) {
                     // Expected on any drop (server restart, network change, etc.) —
                     // fall through to the backoff delay and try again below.

@@ -19,6 +19,17 @@ class SqlSessionStore(private val db: NoTraceDatabase) : SessionStore {
         return SessionRecord() // fresh/empty record — SessionBuilder fills it in via X3DH
     }
 
+    override fun loadExistingSessions(addresses: MutableList<SignalProtocolAddress>): MutableList<SessionRecord> {
+        val out = mutableListOf<SessionRecord>()
+        for (address in addresses) {
+            if (!containsSession(address)) {
+                throw IllegalStateException("No session for ${address.name}:${address.deviceId}")
+            }
+            out += loadSession(address)
+        }
+        return out
+    }
+
     override fun getSubDeviceSessions(name: String): MutableList<Int> {
         val out = mutableListOf<Int>()
         db.openReadable().rawQuery(

@@ -12,7 +12,7 @@ import org.signal.libsignal.protocol.message.SignalMessage
 import org.signal.libsignal.protocol.state.PreKeyBundle
 import org.signal.libsignal.protocol.state.PreKeyRecord
 import org.signal.libsignal.protocol.state.SignedPreKeyRecord
-import org.signal.libsignal.protocol.util.KeyHelper
+import java.security.SecureRandom
 import android.util.Base64
 
 /**
@@ -62,13 +62,28 @@ class SignalSessionManager(db: NoTraceDatabase) {
     fun generatePreKeyBatchForUpload(oneTimeCount: Int = 100): PreKeyUploadBatch {
         val identityKeyPair = identityStore.identityKeyPair
 
-        val signedPreKeyId = KeyHelper.generateSignedPreKeyId()
-        val signedPreKey = KeyHelper.generateSignedPreKey(identityKeyPair, signedPreKeyId)
+        val signedPreKeyId = nextUnusedId { signedPreKeyStore.containsSignedPreKey(it) }
+        val signedPreKeyPair = Curve.generateKeyPair()
+        val signedPreKeySignature = Curve.calculateSignature(
+            identityKeyPair.privateKey,
+            signedPreKeyPair.publicKey.serialize(),
+        )
+        val signedPreKey = SignedPreKeyRecord(
+            signedPreKeyId,
+            System.currentTimeMillis(),
+            signedPreKeyPair,
+            signedPreKeySignature,
+        )
         signedPreKeyStore.storeSignedPreKey(signedPreKeyId, signedPreKey)
 
-        val startId = KeyHelper.generatePreKeyId()
-        val oneTimeKeys = KeyHelper.generatePreKeys(startId, oneTimeCount)
-        oneTimeKeys.forEach { preKeyStore.storePreKey(it.id, it) }
+        val oneTimeKeys = ArrayList<PreKeyRecord>(oneTimeCount)
+        repeat(oneTimeCount) {
+            val keyId = nextUnusedId { preKeyStore.containsPreKey(it) }
+            val keyPair = Curve.generateKeyPair()
+            val record = PreKeyRecord(keyId, keyPair)
+            preKeyStore.storePreKey(keyId, record)
+            oneTimeKeys += record
+        }
 
         return PreKeyUploadBatch(
             registrationId = registrationId,
@@ -118,6 +133,16 @@ class SignalSessionManager(db: NoTraceDatabase) {
             .process(bundle)
     }
 
+    private fun nextUnusedId(isUsed: (Int) -> Boolean): Int {
+        val random = SecureRandom()
+        var candidate = random.nextInt(MAX_PREKEY_ID) + 1
+        repeat(MAX_PREKEY_ID) {
+            if (!isUsed(candidate)) return candidate
+            candidate = if (candidate == MAX_PREKEY_ID) 1 else candidate + 1
+        }
+        throw IllegalStateException("No unused Signal pre-key ID available")
+    }
+
     /**
      * BUGFIX (audit): added so callers (see SplashScreen) can skip
      * regenerating + re-uploading a full prekey batch on every single app
@@ -137,7 +162,7 @@ class SignalSessionManager(db: NoTraceDatabase) {
     /** Double Ratchet encrypt. Returns the raw ciphertext bytes + whether it's a first-message (PreKey) type. */
     fun encrypt(peerNumericId: String, plaintext: ByteArray): EncryptedEnvelope {
         val address = SignalProtocolAddress(peerNumericId, 1)
-        val cipher = SessionCipher(sessionStore, preKeyStore, signedPreKeyStore, identityStore, address)
+        val cipher = SessionCipher(sessionStore, preKeyStore, signedPreKeyStore, null, identityStore, address)
         val message = cipher.encrypt(plaintext)
         return EncryptedEnvelope(
             isPreKeyMessage = message.type == CiphertextMessage.PREKEY_TYPE,
@@ -148,12 +173,16 @@ class SignalSessionManager(db: NoTraceDatabase) {
     /** Double Ratchet decrypt. Handles both the first PreKeySignalMessage and ordinary SignalMessages. */
     fun decrypt(peerNumericId: String, envelope: EncryptedEnvelope): ByteArray {
         val address = SignalProtocolAddress(peerNumericId, 1)
-        val cipher = SessionCipher(sessionStore, preKeyStore, signedPreKeyStore, identityStore, address)
+        val cipher = SessionCipher(sessionStore, preKeyStore, signedPreKeyStore, null, identityStore, address)
         return if (envelope.isPreKeyMessage) {
             cipher.decrypt(PreKeySignalMessage(envelope.bytes))
         } else {
             cipher.decrypt(SignalMessage(envelope.bytes))
         }
+    }
+    companion object {
+        // libsignal's legacy Signal pre-key ID space is 1..16380.
+        private const val MAX_PREKEY_ID = 16_380
     }
 }
 

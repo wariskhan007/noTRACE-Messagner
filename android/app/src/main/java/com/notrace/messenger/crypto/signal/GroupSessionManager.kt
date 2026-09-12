@@ -74,11 +74,11 @@ class GroupSessionManager(db: NoTraceDatabase, private val myNumericId: String) 
 
     /** Encrypts with OUR OWN Sender Key for this epoch — `createOwnDistributionMessage` must have been called (and distributed) for it at least once first. */
     fun encrypt(epoch: UUID, plaintext: ByteArray): ByteArray =
-        GroupCipher(senderKeyStore, myAddress, epoch).encrypt(plaintext)
+        GroupCipher(senderKeyStore, myAddress).encrypt(epoch, plaintext).serialize()
 
     /** Decrypts a message sent by `fromNumericId` under their Sender Key for this epoch. */
     fun decrypt(fromNumericId: String, epoch: UUID, ciphertext: ByteArray): ByteArray {
         val senderAddress = SignalProtocolAddress(fromNumericId, 1)
-        return GroupCipher(senderKeyStore, senderAddress, epoch).decrypt(ciphertext)
+        return GroupCipher(senderKeyStore, senderAddress).decrypt(ciphertext)
     }
 }

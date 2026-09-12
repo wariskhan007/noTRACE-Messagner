@@ -71,6 +71,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.signal/libsignal-client
     // before building — pin an exact version, don't float on a range.
     implementation("org.signal:libsignal-client:0.58.3")
+    implementation("org.signal:libsignal-android:0.58.3")
 
     // --- Coroutines (WebSocket client, session ops off the main thread) ---
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")

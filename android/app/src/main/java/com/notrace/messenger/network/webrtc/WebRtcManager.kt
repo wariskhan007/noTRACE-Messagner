@@ -84,7 +84,7 @@ class WebRtcManager(
                     onConnectionStateChanged(newState)
                 override fun onDataChannel(channel: DataChannel) = observeDataChannel(channel)
                 override fun onAddTrack(receiver: RtpReceiver, streams: Array<out MediaStream>) {
-                    (receiver.track() as? VideoTrack)?.let(onRemoteVideoTrack)
+                    (receiver.track() as? VideoTrack)?.let { track -> onRemoteVideoTrack(track) }
                 }
 
                 override fun onSignalingChange(p0: PeerConnection.SignalingState) {}
