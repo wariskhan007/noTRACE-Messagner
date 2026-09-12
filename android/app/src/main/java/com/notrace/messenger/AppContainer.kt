@@ -30,7 +30,7 @@ class AppContainer(private val context: Context, private val applicationScope: C
         // exception to Android's default cleartext block. A real deployment MUST
         // use wss:// (not ws://) — nothing else needs that cleartext exception, and
         // it should never be widened to cover any address you'd use in production.
-        const val SIGNALING_SERVER_URL = "wss://notracesms-kk553fck.b4a.run"
+        const val SIGNALING_SERVER_URL = "wss://notrace1-c51xakzz.b4a.run"
     }
 
     val db: NoTraceDatabase by lazy {
