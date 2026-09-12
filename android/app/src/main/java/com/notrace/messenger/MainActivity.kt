@@ -2,7 +2,6 @@ package com.notrace.messenger
 
 import android.os.Bundle
 import android.view.WindowManager
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -13,13 +12,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import com.notrace.messenger.navigation.NoTraceNavGraph
 import com.notrace.messenger.network.webrtc.CallState
 import com.notrace.messenger.ui.screens.CallScreen
 import com.notrace.messenger.ui.screens.LockScreen
 import com.notrace.messenger.ui.theme.NoTraceTheme
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private val container by lazy { (application as NoTraceApplication).container }
 
